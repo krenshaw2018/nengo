@@ -6,7 +6,7 @@ import numpy as np
 import nengo.utils.numpy as npext
 from nengo.base import NengoObject, ObjView
 from nengo.exceptions import ValidationError
-from nengo.params import Default, IntParam, Parameter
+from nengo.params import BoolParam, Default, IntParam, Parameter
 from nengo.processes import Process
 from nengo.rc import rc
 from nengo.utils.numpy import is_array_like
@@ -185,12 +185,14 @@ class Node(NengoObject):
     output = OutputParam("output", default=None)
     size_in = IntParam("size_in", default=None, low=0, optional=True)
     size_out = IntParam("size_out", default=None, low=0, optional=True)
+    check_output = BoolParam("check_output", default=True)
 
     def __init__(
         self,
         output=Default,
         size_in=Default,
         size_out=Default,
+        check_output=Default,
         label=Default,
         seed=Default,
     ):
@@ -200,6 +202,7 @@ class Node(NengoObject):
 
         self.size_in = size_in
         self.size_out = size_out
+        self.check_output = check_output
         self.output = output  # Must be set after size_out; may modify size_out
 
     def __getitem__(self, key):
