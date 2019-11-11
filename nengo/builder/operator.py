@@ -739,6 +739,10 @@ class SimPyFunc(Operator):
         If None, an input signal will not be passed to ``fn``.
     tag : str, optional
         A label associated with the operator, for debugging purposes.
+    check_output : bool
+        Whether to perform checking for non-finite values on the output.
+    copy_x : bool
+        Whether to copy the ``x`` value before passing it into the function.
 
     Attributes
     ----------
@@ -763,12 +767,13 @@ class SimPyFunc(Operator):
     4. updates ``[]``
     """
 
-    def __init__(self, output, fn, t, x, tag=None, check_output=False):
+    def __init__(self, output, fn, t, x, tag=None, check_output=True, copy_x=False):
         super().__init__(tag=tag)
         self.fn = fn
         self.t_passed = t is not None
         self.x_passed = x is not None
         self.check_output = check_output
+        self.copy_x = copy_x
 
         self.sets = [] if output is None else [output]
         self.incs = []
@@ -797,29 +802,53 @@ class SimPyFunc(Operator):
         output = signals[self.output] if self.output is not None else None
         t = signals[self.t] if self.t is not None else None
         x = signals[self.x] if self.x is not None else None
-        if x is not None:
-            x = x.view()
-            x.setflags(write=False)
 
-        if t is not None and x is not None:
-            def fn_call():
-                return fn(t.item(), x)
-        elif t is not None and x is None:
+        if x is not None:
+            if self.copy_x:
+                if t is not None:
+
+                    def fn_call():
+                        return fn(t.item(), x.copy())
+
+                else:
+
+                    def fn_call():
+                        return fn(x.copy())
+
+            else:
+                # make read-only view so users cannot modify internal signals
+                x = x.view()
+                x.setflags(write=False)
+                if t is not None:
+
+                    def fn_call():
+                        return fn(t.item(), x)
+
+                else:
+
+                    def fn_call():
+                        return fn(x)
+
+        elif t is not None:
+
             def fn_call():
                 return fn(t.item())
-        elif t is None and x is not None:
-            def fn_call():
-                return fn(x)
-        elif t is None and x is None:
+
+        else:
             fn_call = fn
 
         if output is None:
+
             def step_simpyfunc():
                 fn_call()
+
         elif not self.check_output:
+
             def step_simpyfunc():
                 output[...] = fn_call()
+
         else:
+
             def step_simpyfunc():
                 y = fn_call()
                 try:

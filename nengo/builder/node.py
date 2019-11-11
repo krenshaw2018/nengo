@@ -46,8 +46,17 @@ def build_node(model, node):
             if node.size_out > 0
             else None
         )
-        model.add_op(SimPyFunc(output=sig_out, fn=node.output, t=model.time, x=sig_in,
-                               check_output=node.check_output, tag="%s.sim" % node))
+        model.add_op(
+            SimPyFunc(
+                output=sig_out,
+                fn=node.output,
+                t=model.time,
+                x=sig_in,
+                check_output=node.check_output,
+                copy_x=False,
+                tag="%s.sim" % node,
+            )
+        )
     elif is_array_like(node.output):
         sig_out = Signal(node.output.astype(rc.float_dtype), name="%s.out" % node)
     else:
