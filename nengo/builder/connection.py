@@ -258,9 +258,7 @@ def build_connection(model, conn):
             raise BuildError("Cannot use function points in direct connection")
         else:
             in_signal = Signal(shape=conn.size_mid, name="%s.func" % conn)
-            model.add_op(
-                SimPyFunc(in_signal, conn.function, None, sliced_in, copy_x=False)
-            )
+            model.add_op(SimPyFunc(in_signal, conn.function, None, sliced_in))
     elif isinstance(conn.pre_obj, Ensemble):  # Normal decoded connection
         eval_points, decoders, solver_info = model.build(conn.solver, conn, rng)
         if conn.solver.weights:

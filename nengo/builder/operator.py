@@ -741,8 +741,6 @@ class SimPyFunc(Operator):
         A label associated with the operator, for debugging purposes.
     check_output : bool
         Whether to perform checking for non-finite values on the output.
-    copy_x : bool
-        Whether to copy the ``x`` value before passing it into the function.
 
     Attributes
     ----------
@@ -767,13 +765,12 @@ class SimPyFunc(Operator):
     4. updates ``[]``
     """
 
-    def __init__(self, output, fn, t, x, tag=None, check_output=True, copy_x=False):
+    def __init__(self, output, fn, t, x, tag=None, check_output=True):
         super().__init__(tag=tag)
         self.fn = fn
         self.t_passed = t is not None
         self.x_passed = x is not None
         self.check_output = check_output
-        self.copy_x = copy_x
 
         self.sets = [] if output is None else [output]
         self.incs = []
@@ -804,30 +801,18 @@ class SimPyFunc(Operator):
         x = signals[self.x] if self.x is not None else None
 
         if x is not None:
-            if self.copy_x:
-                if t is not None:
+            # make read-only view so users cannot modify internal signals
+            x = x.view()
+            x.setflags(write=False)
+            if t is not None:
 
-                    def fn_call():
-                        return fn(t.item(), x.copy())
-
-                else:
-
-                    def fn_call():
-                        return fn(x.copy())
+                def fn_call():
+                    return fn(t.item(), x)
 
             else:
-                # make read-only view so users cannot modify internal signals
-                x = x.view()
-                x.setflags(write=False)
-                if t is not None:
 
-                    def fn_call():
-                        return fn(t.item(), x)
-
-                else:
-
-                    def fn_call():
-                        return fn(x)
+                def fn_call():
+                    return fn(x)
 
         elif t is not None:
 

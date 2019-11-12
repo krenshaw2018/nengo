@@ -53,7 +53,6 @@ def build_node(model, node):
                 t=model.time,
                 x=sig_in,
                 check_output=node.check_output,
-                copy_x=False,
                 tag="%s.sim" % node,
             )
         )
