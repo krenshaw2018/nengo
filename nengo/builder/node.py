@@ -52,7 +52,7 @@ def build_node(model, node):
                 fn=node.output,
                 t=model.time,
                 x=sig_in,
-                check_output=node.check_output,
+                check_output=model.config[node].check_output,
                 tag="%s.sim" % node,
             )
         )
