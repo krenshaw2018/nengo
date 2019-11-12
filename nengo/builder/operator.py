@@ -771,6 +771,7 @@ class SimPyFunc(Operator):
         self.t_passed = t is not None
         self.x_passed = x is not None
         self.check_output = check_output
+        assert not (t is None and x is None), "Python function cannot have no inputs"
 
         self.sets = [] if output is None else [output]
         self.incs = []
@@ -818,9 +819,6 @@ class SimPyFunc(Operator):
 
             def fn_call():
                 return fn(t.item())
-
-        else:
-            fn_call = fn
 
         if output is None:
 
